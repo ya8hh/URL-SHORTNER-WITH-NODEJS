@@ -1,20 +1,34 @@
+
 const express = require("express");
+const StaticRoute = require("./routes/staticsRoutes")
+
+
+const path = require ('path');
 const app = express();
 const urlRoute = require('./routes/url');
 const { connectToMongoDB } = require('./connect');
 const URL = require('./models/url');
 
-const PORT = 8001;
+const port = 3001;
+
+app.set("view engine","ejs");
+app.set("views",path.resolve('./views'))
 
 connectToMongoDB('mongodb://localhost:27017/short-url')
     .then(() => console.log('mongoDB connected'));
 app.use(express.json());
+app.use(express.urlencoded({extended:false}))
 
-app.get("/", (req, res) => {
-    return res.end("<h1>hi there test</h1>");
+app.get("/test", async (req, res) => {
+    const allURLs = await URL.find({}) ;
+    return res.render("home",{
+        urls: allURLs,
+    });
 });
 
 app.use("/url", urlRoute);
+app.use("/",StaticRoute);
+
 
 // Handle redirection
 app.get('/:shortId', async (req, res) => {
@@ -43,4 +57,4 @@ app.get('/:shortId', async (req, res) => {
     }
 });
 
-app.listen(PORT, () => console.log(`Server Started at PORT ${PORT}`));
+app.listen(port, () => console.log(`Server Started at PORT ${port}`));
